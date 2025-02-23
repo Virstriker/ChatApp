@@ -1,6 +1,5 @@
 // Initialize Socket.IO with proper configuration for Vercel
-const socket = io({
-    path: '/socket.io',
+const socket = io(window.location.origin, {
     transports: ['websocket', 'polling'],
     reconnection: true,
     reconnectionAttempts: 5,

@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WhatsApp Clone - Chat</title>
     <link rel="stylesheet" href="/css/style.css">
+    <script src="https://cdn.socket.io/4.8.1/socket.io.min.js"></script>
 </head>
 <body>
     <div class="chat-container">
@@ -47,7 +48,6 @@
         </div>
     </template>
 
-    <script src="/socket.io/socket.io.js"></script>
     <script>
         // Current user data from server
         const currentUser = JSON.parse('<%- JSON.stringify(locals.user || {}) %>');

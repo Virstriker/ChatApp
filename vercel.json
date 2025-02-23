@@ -15,12 +15,17 @@
     ],
     "routes": [
         {
-            "src": "/socket.io/(.*)",
-            "dest": "server.js"
+            "handle": "filesystem"
         },
         {
-            "src": "/socket.io",
-            "dest": "server.js"
+            "src": "/socket.io/(.*)",
+            "dest": "server.js",
+            "headers": {
+                "Access-Control-Allow-Origin": "*",
+                "Access-Control-Allow-Methods": "GET,HEAD,PUT,PATCH,POST,DELETE",
+                "Access-Control-Allow-Headers": "Origin, X-Requested-With, Content-Type, Accept",
+                "Access-Control-Allow-Credentials": "true"
+            }
         },
         {
             "src": "/css/(.*)",
@@ -29,9 +34,6 @@
         {
             "src": "/js/(.*)",
             "dest": "/public/js/$1"
-        },
-        {
-            "handle": "filesystem"
         },
         {
             "src": "/(.*)",
