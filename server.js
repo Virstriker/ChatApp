@@ -1,21 +1,33 @@
 const express = require('express');
 const session = require('express-session');
+const path = require('path');
 const app = express();
 const server = require('http').Server(app);
-const io = require('socket.io')(server);
+const io = require('socket.io')(server, {
+    cors: {
+        origin: "*",
+        methods: ["GET", "POST"]
+    }
+});
 
-// Session middleware
+// Session middleware with more secure settings for production
 app.use(session({
     secret: 'whatsapp_clone_secret',
     resave: false,
-    saveUninitialized: true
+    saveUninitialized: false,
+    cookie: {
+        secure: process.env.NODE_ENV === 'production',
+        httpOnly: true,
+        maxAge: 24 * 60 * 60 * 1000 // 24 hours
+    }
 }));
 
-// Set EJS as templating engine
+// Set views directory explicitly for Vercel
+app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
 
-// Serve static files
-app.use(express.static('public'));
+// Serve static files with explicit path
+app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.urlencoded({ extended: true }));
 
 // Store online users
@@ -66,19 +78,19 @@ app.get('/logout', (req, res) => {
 io.on('connection', (socket) => {
     let userId;
 
-socket.on('user_connected', (user) => {
-    if (user && user.id) {
-        userId = user.id;
-        onlineUsers.set(userId, {
-            id: user.id,
-            name: user.name,
-            socketId: socket.id
-        });
-        
-        // Broadcast online users list to everyone
-        io.emit('users_list', Array.from(onlineUsers.values()));
-    }
-});
+    socket.on('user_connected', (user) => {
+        if (user && user.id) {
+            userId = user.id;
+            onlineUsers.set(userId, {
+                id: user.id,
+                name: user.name,
+                socketId: socket.id
+            });
+            
+            // Broadcast online users list to everyone
+            io.emit('users_list', Array.from(onlineUsers.values()));
+        }
+    });
 
     socket.on('private_message', ({ to, message }) => {
         const toUser = onlineUsers.get(to);
@@ -129,7 +141,12 @@ socket.on('user_connected', (user) => {
     });
 });
 
-const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-});
+// Handle Vercel serverless environment
+if (process.env.VERCEL) {
+    module.exports = app;
+} else {
+    const PORT = process.env.PORT || 3000;
+    server.listen(PORT, () => {
+        console.log(`Server running on port ${PORT}`);
+    });
+}
