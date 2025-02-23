@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WhatsApp Clone - Chat</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <div class="chat-container">
+        <div class="sidebar">
+            <div class="header">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
+                    <span>Online Users</span>
+                </div>
+                <button class="theme-toggle" title="Toggle theme" onclick="toggleTheme()">🌙</button>
+            </div>
+            <div class="users-list" id="usersList">
+                <!-- Users will be populated here -->
+            </div>
+        </div>
+        <div class="chat-area" id="chatArea">
+            <div class="chat-header">
+                <button class="back-button" title="Show users list" onclick="showUsersList()">←</button>
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <div class="profile-pic"></div>
+                    <span>Select a user to start chatting</span>
+                </div>
+            </div>
+            <div class="no-chat-selected">
+                Select a user to start chatting
+            </div>
+        </div>
+    </div>
+
+    <template id="chatTemplate">
+        <div class="chat-header" id="chatHeader">
+            <!-- Selected user name will appear here -->
+        </div>
+        <div class="messages" id="messages">
+            <!-- Messages will appear here -->
+        </div>
+        <div class="input-area">
+            <input type="text" class="message-input" id="messageInput" placeholder="Type a message">
+            <button class="send-button" id="sendButton">Send</button>
+        </div>
+    </template>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        // Current user data from server
+        const currentUser = JSON.parse('<%- JSON.stringify(locals.user || {}) %>');
+
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+            
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            
+            const themeToggle = document.querySelector('.theme-toggle');
+            themeToggle.textContent = newTheme === 'light' ? '🌙' : '☀️';
+        }
+
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            sidebar.classList.toggle('show');
+        }
+
+        // Handle mobile navigation
+        function showUsersList() {
+            document.querySelector('.sidebar').classList.add('show');
+        }
+
+        // Handle screen resize
+        window.addEventListener('resize', () => {
+            const sidebar = document.querySelector('.sidebar');
+            const menuToggle = document.querySelector('.menu-toggle');
+            
+            if (window.innerWidth > 768) {
+                sidebar.classList.remove('show');
+                menuToggle.classList.add('hidden');
+            } else {
+                menuToggle.classList.remove('hidden');
+            }
+        });
+
+        // Initialize mobile UI
+        if (window.innerWidth <= 768) {
+            document.querySelector('.menu-toggle').classList.remove('hidden');
+        }
+
+        // Set initial theme from localStorage
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+        document.querySelector('.theme-toggle').textContent = savedTheme === 'light' ? '🌙' : '☀️';
+    </script>
+    <script src="/js/chat.js"></script>
+</body>
+</html>
