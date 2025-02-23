@@ -10,14 +10,17 @@ const io = require('socket.io')(server, {
     }
 });
 
-// Session middleware with more secure settings for production
+// Session middleware with configuration for Vercel
+app.set('trust proxy', 1); // Trust first proxy for Vercel
 app.use(session({
     secret: 'whatsapp_clone_secret',
     resave: false,
     saveUninitialized: false,
+    proxy: true,
     cookie: {
         secure: process.env.NODE_ENV === 'production',
         httpOnly: true,
+        sameSite: 'lax',
         maxAge: 24 * 60 * 60 * 1000 // 24 hours
     }
 }));
@@ -37,10 +40,9 @@ const privateChats = new Map(); // Map(roomId => Set(userId))
 // Routes
 app.get('/', (req, res) => {
     if (req.session.user) {
-        res.redirect('/chat');
-    } else {
-        res.render('login');
+        return res.redirect('/chat');
     }
+    res.render('login');
 });
 
 app.post('/login', (req, res) => {
@@ -50,7 +52,14 @@ app.post('/login', (req, res) => {
             id: Date.now().toString(),
             name: username
         };
-        res.redirect('/chat');
+        // Ensure session is saved before redirect
+        req.session.save((err) => {
+            if (err) {
+                console.error('Session save error:', err);
+                return res.redirect('/');
+            }
+            res.redirect('/chat');
+        });
     } else {
         res.redirect('/');
     }
@@ -70,8 +79,12 @@ app.get('/chat', (req, res) => {
 
 // Add logout route
 app.get('/logout', (req, res) => {
-    req.session.destroy();
-    res.redirect('/');
+    req.session.destroy((err) => {
+        if (err) {
+            console.error('Session destruction error:', err);
+        }
+        res.redirect('/');
+    });
 });
 
 // Socket.IO handlers
@@ -139,6 +152,11 @@ io.on('connection', (socket) => {
             io.emit('users_list', Array.from(onlineUsers.values()));
         }
     });
+});
+
+// Fallback route for handling 404
+app.use((req, res) => {
+    res.redirect('/');
 });
 
 // Handle Vercel serverless environment

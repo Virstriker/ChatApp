@@ -8,6 +8,10 @@
         {
             "src": "public/**",
             "use": "@vercel/static"
+        },
+        {
+            "src": "views/**",
+            "use": "@vercel/static"
         }
     ],
     "routes": [
@@ -33,5 +37,11 @@
     ],
     "env": {
         "NODE_ENV": "production"
+    },
+    "functions": {
+        "server.js": {
+            "memory": 1024,
+            "maxDuration": 10
+        }
     }
 }
