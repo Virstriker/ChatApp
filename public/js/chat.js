@@ -1,4 +1,12 @@
-const socket = io();
+// Initialize Socket.IO with proper configuration for Vercel
+const socket = io({
+    path: '/socket.io',
+    transports: ['websocket', 'polling'],
+    reconnection: true,
+    reconnectionAttempts: 5,
+    reconnectionDelay: 1000
+});
+
 let selectedUser = null;
 const chatMessages = new Map(); // Store messages for each user
 let typingTimeout;
@@ -9,7 +17,9 @@ const chatArea = document.getElementById('chatArea');
 const chatTemplate = document.getElementById('chatTemplate');
 
 // Connect to Socket.IO and send user data
-socket.emit('user_connected', currentUser);
+socket.on('connect', () => {
+    socket.emit('user_connected', currentUser);
+});
 
 // Get initials from name
 function getInitials(name) {
@@ -135,6 +145,15 @@ socket.on('user_stop_typing', ({ from }) => {
             typingIndicator.style.display = 'none';
         }
     }
+});
+
+// Handle connection errors
+socket.on('connect_error', (error) => {
+    console.error('Connection error:', error);
+});
+
+socket.on('disconnect', (reason) => {
+    console.log('Disconnected:', reason);
 });
 
 // Select a user to chat with

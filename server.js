@@ -4,10 +4,15 @@ const path = require('path');
 const app = express();
 const server = require('http').Server(app);
 const io = require('socket.io')(server, {
+    path: '/socket.io',
     cors: {
         origin: "*",
-        methods: ["GET", "POST"]
-    }
+        methods: ["GET", "POST"],
+        transports: ['websocket', 'polling']
+    },
+    allowEIO3: true,
+    serveClient: true,
+    maxHttpBufferSize: 1e8
 });
 
 // Session middleware with configuration for Vercel
@@ -160,11 +165,11 @@ app.use((req, res) => {
 });
 
 // Handle Vercel serverless environment
+const port = process.env.PORT || 3000;
 if (process.env.VERCEL) {
     module.exports = app;
 } else {
-    const PORT = process.env.PORT || 3000;
-    server.listen(PORT, () => {
-        console.log(`Server running on port ${PORT}`);
+    server.listen(port, () => {
+        console.log(`Server running on port ${port}`);
     });
 }
